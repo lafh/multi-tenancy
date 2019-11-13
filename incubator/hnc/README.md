@@ -129,3 +129,29 @@ milestones are defined:
 
 Non-coding tasks are also tracked in the [HNC
 project](https://github.com/kubernetes-sigs/multi-tenancy/projects/4).
+
+## Releasing
+
+[comment]: # (TODO: pull the code directly from Github)
+1.Check out the code to the version that you want to release and run the 
+following command in `incubator/hnc`.
+```bash
+make release
+```
+It will use Cloud Build (on your GCP account)
+to build the container image remotely while building YAMLs locally.
+
+2.Make sure you have [permisison]((https://github.com/kubernetes/k8s.io/blob/master/groups/groups.yaml#L566)) to access `k8s-staging-multitenancy`'s GCR.
+Then upload the container image via the following commands:
+```bash
+docker pull gcr.io/$PROJECT_ID/hnc/controller
+docker tag gcr.io/$PROJECT_ID/hnc/controller gcr.io/k8s-staging-multitenancy/hnc/controller:$VERSION_TAG
+docker push gcr.io/k8s-staging-multitenancy/hnc/controller:$VERSION_TAG
+```
+The reason why we separate the build and the storage in different GCP projects 
+is that the ACL list only gives us the permission to push an exisiting container 
+image without using the Cloud Build. Cloud Builds needs permisson for `storage.bucket`,
+which is not granted by the ACL list. 
+
+3.Upload generated YAMLs (located in `incubator/hnc/manifests/hnc-manager.yaml`) 
+to Github. See instructions [here](https://help.github.com/en/github/administering-a-repository/creating-releases).
